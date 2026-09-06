@@ -21,6 +21,9 @@ yarn-error.log*
 .env*
 !.env.example
 
+# local assistant memory
+/data/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

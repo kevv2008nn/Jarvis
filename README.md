@@ -19,6 +19,50 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Phone calls
+
+Jarvis can call your mobile through Twilio. Copy `.env.example` to `.env.local`,
+fill in the Twilio account values and your phone number, then expose the app
+through an HTTPS tunnel such as `ngrok http 3000`. Set `JARVIS_PUBLIC_URL` to
+that public URL. Click **CALL JARVIS** and say commands such as `open notepad`.
+
+The phone call can launch the allowlisted Windows apps. The browser voice mode
+continues normally after the call ends. Never commit `.env.local`.
+
+## Free phone voice link
+
+For a no-payment option, use the WebRTC phone link instead of Twilio:
+
+1. Start Jarvis with `npm run dev`.
+2. Open the PC page and click **CONNECT PHONE**.
+3. Open the displayed `/phone?room=XXXXXX` link on your mobile.
+4. Tap **TALK TO JARVIS**, allow microphone access, and speak commands.
+
+The phone sends recognized command text directly to the PC through WebRTC.
+The PC can launch the allowlisted apps and send an acknowledgement back to the
+phone. The room expires after ten minutes and the browser voice mode remains
+independent after disconnecting.
+
+Phone microphone permissions require a secure context. `localhost` works on the
+PC, but a phone using a network address normally needs an HTTPS tunnel such as
+`ngrok http 3000` or Cloudflare Tunnel. This is a browser connection, not a
+cellular phone call, and no carrier payment is required.
+
+## Local AI assistant
+
+Jarvis uses Ollama for natural-language requests that are not direct commands.
+Install Ollama from [ollama.com](https://ollama.com), then run:
+
+```powershell
+ollama run llama3.2:3b
+```
+
+Keep Ollama running while using Jarvis. Conversations are saved locally in
+`data/jarvis-memory.json` and the last 12 messages are used as context later.
+This is persistent memory, not automatic model retraining. The model does not
+execute arbitrary computer actions; only the explicit allowlisted commands can
+launch PC applications.
+
 ## Controls
 
 ### Mouse / touch
