@@ -200,6 +200,7 @@ export default function JarvisOrb() {
   }, [speak]);
 
   const startVoice = useCallback(() => {
+    if (recognitionRef.current) return;
     const browserWindow = window as Window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };
     const SpeechRecognition = browserWindow.SpeechRecognition ?? browserWindow.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -207,6 +208,31 @@ export default function JarvisOrb() {
       speak("Voice control is not supported in this browser.");
       return;
     }
+
+    if (!window.isSecureContext && window.location.hostname !== "localhost") {
+      setVoice("off");
+      setVoiceText("VOICE NEEDS HTTPS");
+      return;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setVoice("off");
+      setVoiceText("MICROPHONE API UNAVAILABLE");
+      return;
+    }
+
+    void navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      stream.getTracks().forEach((track) => track.stop());
+      if (!recognitionRef.current) startVoiceSession(SpeechRecognition);
+    }).catch((error: unknown) => {
+      setVoice("off");
+      setVoiceText(error instanceof DOMException && error.name === "NotAllowedError"
+        ? "ALLOW MICROPHONE ACCESS"
+        : "MICROPHONE IS UNAVAILABLE");
+    });
+  }, []);
+
+  const startVoiceSession = useCallback((SpeechRecognition: SpeechRecognitionConstructor) => {
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = false;

@@ -106,4 +106,4 @@ Click **GESTURES OFF** (or press `G`) and allow camera access, then:
 
 ## License
 
-MIT
+SIET
