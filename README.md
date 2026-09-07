@@ -50,18 +50,22 @@ cellular phone call, and no carrier payment is required.
 
 ## Local AI assistant
 
-Jarvis uses Ollama for natural-language requests that are not direct commands.
-Install Ollama from [ollama.com](https://ollama.com), then run:
+Jarvis uses Gemini for natural-language requests that are not direct commands.
+Create a Gemini API key in Google AI Studio and add it to `.env.local`:
 
-```powershell
-ollama run llama3.2:3b
+```env
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-2.0-flash
 ```
 
-Keep Ollama running while using Jarvis. Conversations are saved locally in
+Keep the key only on the server. Conversations are saved locally in
 `data/jarvis-memory.json` and the last 12 messages are used as context later.
-This is persistent memory, not automatic model retraining. The model does not
+This is persistent memory, not automatic model retraining. Gemini does not
 execute arbitrary computer actions; only the explicit allowlisted commands can
 launch PC applications.
+
+On serverless hosting, local file memory is best-effort and may reset between
+deployments. Use a hosted database later if shared persistent memory is needed.
 
 ## Controls
 

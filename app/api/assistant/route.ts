@@ -6,7 +6,8 @@ export async function POST(request: Request) {
   const text = body.text?.trim();
   if (!text) return NextResponse.json({ reply: "I am listening." });
 
-  const model = process.env.OLLAMA_MODEL ?? "llama3.2:3b";
+  const apiKey = process.env.GEMINI_API_KEY;
+  const model = process.env.GEMINI_MODEL ?? "gemini-2.0-flash";
   const memory = await readMemory();
   const context = memory.slice(-12).map((item) => `${item.role}: ${item.content}`).join("\n");
   const prompt = [
@@ -18,15 +19,25 @@ export async function POST(request: Request) {
     "Reply in one or two short spoken sentences.",
   ].join("\n\n");
 
+  if (!apiKey) {
+    return NextResponse.json({
+      reply: "My Gemini connection is not configured yet. Add GEMINI_API_KEY to the server environment, then try again.",
+    }, { status: 503 });
+  }
+
   try {
-    const response = await fetch("http://127.0.0.1:11434/api/generate", {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model, prompt, stream: false }),
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.4, maxOutputTokens: 180 },
+      }),
     });
-    if (!response.ok) throw new Error("Ollama unavailable");
-    const result = (await response.json()) as { response?: string };
-    const reply = result.response?.trim() || "I am ready. Tell me what you want to do next.";
+    if (!response.ok) throw new Error(`Gemini request failed: ${response.status}`);
+    const result = (await response.json()) as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+    const reply = result.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("").trim()
+      || "I am ready. Tell me what you want to do next.";
     await remember([
       { role: "user", content: text, createdAt: new Date().toISOString() },
       { role: "assistant", content: reply, createdAt: new Date().toISOString() },
@@ -34,8 +45,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ reply });
   } catch {
     return NextResponse.json({
-      reply: "I can understand that request once my local AI model is online. Start Ollama and load the configured model, then ask me again.",
-      setup: "ollama run llama3.2:3b",
-    });
+      reply: "I could not reach Gemini right now. Check the API key and server connection, then try again.",
+    }, { status: 502 });
   }
 }

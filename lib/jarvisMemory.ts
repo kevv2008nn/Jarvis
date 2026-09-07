@@ -14,7 +14,11 @@ export async function readMemory(): Promise<MemoryItem[]> {
 }
 
 export async function remember(items: MemoryItem[]) {
-  await mkdir(path.dirname(memoryPath), { recursive: true });
-  const current = await readMemory();
-  await writeFile(memoryPath, JSON.stringify([...current, ...items].slice(-100), null, 2));
+  try {
+    await mkdir(path.dirname(memoryPath), { recursive: true });
+    const current = await readMemory();
+    await writeFile(memoryPath, JSON.stringify([...current, ...items].slice(-100), null, 2));
+  } catch {
+    // Hosted serverless filesystems may not support persistent writes.
+  }
 }

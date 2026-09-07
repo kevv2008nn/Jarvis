@@ -162,7 +162,7 @@ export default function JarvisOrb() {
       const result = await response.json() as { reply?: string };
       speak(result.reply ?? "I am ready. Tell me what you want to do next.", () => restartVoiceRef.current?.());
     } catch {
-      speak("I am ready, but my local AI service is offline. Start Ollama and ask again.", () => restartVoiceRef.current?.());
+      speak("I am ready, but Gemini is unavailable. Check the server API key and ask again.", () => restartVoiceRef.current?.());
     }
   }, [speak]);
 
